@@ -1,2 +1,4 @@
 #pragma once
-void runWorker();
+#include "config.h"
+
+void processar(const Config& cfg);
