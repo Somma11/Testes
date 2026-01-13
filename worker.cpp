@@ -15,6 +15,7 @@ void processar(const Config& cfg) {
         copiados.insert(line);
 
     std::string origem = cfg.origemBase + "\\" + getAnoMesAtual();
+<<<<<<< HEAD
 
     if (!fs::exists(origem)) return;
 
@@ -37,34 +38,27 @@ void processar(const Config& cfg) {
     }
 }    while (true) {
         std::string origem = cfg.baseOrigem + "\\" + getAnoMesAtual();
+=======
+    if (!fs::exists(origem)) return;
+>>>>>>> 0708694 (Refatorar configuração e lógica de processamento de arquivos)
 
-        if (fs::exists(origem)) {
-            for (auto& f : fs::directory_iterator(origem)) {
-                if (!f.is_regular_file())
-                    continue;
+    for (auto& f : fs::directory_iterator(origem)) {
+        if (!f.is_regular_file()) continue;
 
-                std::string nome = f.path().filename().string();
-                std::string hash = sha256File(f.path().string());
-                std::string registro = nome + ":" + hash;
+        std::string full = f.path().string();
+        std::string hash = sha256(full);
+        std::string registro = full + ":" + hash;
 
-                if (copiados.contains(registro))
-                    continue;
+        if (copiados.find(registro) != copiados.end())
+            continue;
 
-                try {
-                    fs::copy_file(
-                        f.path(),
-                        cfg.destino + "\\" + nome,
-                        fs::copy_options::overwrite_existing
-                    );
+        fs::copy_file(
+            full,
+            cfg.destino + "\\" + f.path().filename().string(),
+            fs::copy_options::overwrite_existing
+        );
 
-                    std::ofstream logOut(getLogPath(), std::ios::app);
-                    logOut << registro << "\n";
-                    copiados.insert(registro);
-                }
-                catch (...) {}
-            }
-        }
-
-        Sleep(cfg.intervaloMs);
+        std::ofstream out(getLogPath(), std::ios::app);
+        out << registro << "\n";
     }
 }

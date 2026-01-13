@@ -1,5 +1,9 @@
 #include "config.h"
 #include <windows.h>
+<<<<<<< HEAD
+=======
+#include <shlobj.h>
+>>>>>>> 0708694 (Refatorar configuração e lógica de processamento de arquivos)
 #include <fstream>
 
 static std::string getConfigPath() {

@@ -2,7 +2,10 @@
 #include "worker.h"
 #include <windows.h>
 #include <shlobj.h>
+<<<<<<< HEAD
 #include <iostream>
+=======
+>>>>>>> 0708694 (Refatorar configuração e lógica de processamento de arquivos)
 
 bool selecionarPasta(std::string& out) {
     BROWSEINFOA bi{};
@@ -29,12 +32,19 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
     }
 
     while (true) {
+<<<<<<< HEAD
         __try {
             processar(cfg);
         }
         __except (EXCEPTION_EXECUTE_HANDLER) {
             // watchdog: ignora crash e continua
         }
+=======
+        try {
+            processar(cfg);
+        } catch (...) {
+        }
+>>>>>>> 0708694 (Refatorar configuração e lógica de processamento de arquivos)
         Sleep(15000);
     }
 }

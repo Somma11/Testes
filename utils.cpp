@@ -1,5 +1,9 @@
 #include "utils.h"
 #include <windows.h>
+<<<<<<< HEAD
+=======
+#include <shlobj.h>
+>>>>>>> 0708694 (Refatorar configuração e lógica de processamento de arquivos)
 #include <sstream>
 #include <iomanip>
 #include <ctime>
