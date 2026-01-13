@@ -1,45 +1,51 @@
 #include "utils.h"
 #include <windows.h>
-#include <shlobj.h>
-#include <ctime>
 #include <sstream>
 #include <iomanip>
-
-std::string getAppDataDir() {
-    char* appdata = nullptr;
-    size_t len = 0;
-    _dupenv_s(&appdata, &len, "APPDATA");
-
-    std::string path = std::string(appdata) + "\\FileMonitor";
-    CreateDirectoryA(path.c_str(), NULL);
-
-    free(appdata);
-    return path;
-}
-
-std::string selectFolderDialog(const std::string& title) {
-    BROWSEINFOA bi{};
-    bi.lpszTitle = title.c_str();
-    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
-
-    LPITEMIDLIST pidl = SHBrowseForFolderA(&bi);
-    if (!pidl) return "";
-
-    char path[MAX_PATH];
-    SHGetPathFromIDListA(pidl, path);
-    CoTaskMemFree(pidl);
-
-    return path;
-}
+#include <ctime>
+#include <wincrypt.h>
+#include <fstream>
 
 std::string getAnoMesAtual() {
-    std::time_t t = std::time(nullptr);
-    std::tm tm;
+    time_t t = time(nullptr);
+    tm tm{};
     localtime_s(&tm, &t);
 
     std::ostringstream oss;
     oss << (tm.tm_year + 1900)
-        << std::setw(2) << std::setfill('0') << (tm.tm_mon + 1);
+        << std::setw(2) << std::setfill('0')
+        << (tm.tm_mon + 1);
+    return oss.str();
+}
+
+std::string getLogPath() {
+    char path[MAX_PATH];
+    SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, path);
+    return std::string(path) + "\\monitor_log.txt";
+}
+
+std::string sha256(const std::string& file) {
+    HCRYPTPROV hProv = 0;
+    HCRYPTHASH hHash = 0;
+    BYTE hash[32];
+    DWORD hashLen = 32;
+
+    CryptAcquireContext(&hProv, nullptr, nullptr, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+    CryptCreateHash(hProv, CALG_SHA_256, 0, 0, &hHash);
+
+    std::ifstream f(file, std::ios::binary);
+    char buf[4096];
+    while (f.read(buf, sizeof(buf)) || f.gcount())
+        CryptHashData(hHash, (BYTE*)buf, (DWORD)f.gcount(), 0);
+
+    CryptGetHashParam(hHash, HP_HASHVAL, hash, &hashLen, 0);
+
+    std::ostringstream oss;
+    for (int i = 0; i < 32; i++)
+        oss << std::hex << std::setw(2) << std::setfill('0') << (int)hash[i];
+
+    CryptDestroyHash(hHash);
+    CryptReleaseContext(hProv, 0);
 
     return oss.str();
 }
