@@ -15,10 +15,10 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
 
-      - name: Build EXE
+      - name: Build
         shell: cmd
         run: |
-          cl /std:c++17 *.cpp /O2 /SUBSYSTEM:WINDOWS advapi32.lib shell32.lib
+          cl /std:c++17 /EHsc *.cpp /O2 advapi32.lib shell32.lib /link /SUBSYSTEM:WINDOWS
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
