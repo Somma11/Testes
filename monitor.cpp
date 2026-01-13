@@ -1,33 +1,40 @@
-#include <windows.h>
-#include <string>
+#include "config.h"
 #include "worker.h"
+#include <windows.h>
+#include <shlobj.h>
+#include <iostream>
 
-int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR cmd, int) {
+bool selecionarPasta(std::string& out) {
+    BROWSEINFOA bi{};
+    bi.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
+    LPITEMIDLIST pidl = SHBrowseForFolderA(&bi);
+    if (!pidl) return false;
 
-    if (std::string(cmd) == "worker") {
-        runWorker();
-        return 0;
+    char path[MAX_PATH];
+    SHGetPathFromIDListA(pidl, path);
+    out = path;
+    return true;
+}
+
+int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
+    Config cfg;
+    if (!loadConfig(cfg)) {
+        MessageBoxA(nullptr, "Selecione a pasta BASE de origem", "Config", MB_OK);
+        if (!selecionarPasta(cfg.origemBase)) return 0;
+
+        MessageBoxA(nullptr, "Selecione a pasta DESTINO", "Config", MB_OK);
+        if (!selecionarPasta(cfg.destino)) return 0;
+
+        saveConfig(cfg);
     }
 
     while (true) {
-        STARTUPINFOA si{ sizeof(si) };
-        PROCESS_INFORMATION pi;
-
-        char cmdLine[] = "monitor.exe worker";
-
-        if (CreateProcessA(
-            NULL,
-            cmdLine,
-            NULL, NULL, FALSE,
-            CREATE_NO_WINDOW,
-            NULL, NULL,
-            &si, &pi
-        )) {
-            WaitForSingleObject(pi.hProcess, INFINITE);
-            CloseHandle(pi.hProcess);
-            CloseHandle(pi.hThread);
+        __try {
+            processar(cfg);
         }
-
-        Sleep(2000);
+        __except (EXCEPTION_EXECUTE_HANDLER) {
+            // watchdog: ignora crash e continua
+        }
+        Sleep(15000);
     }
 }
