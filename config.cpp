@@ -1,38 +1,24 @@
 #include "config.h"
-#include "utils.h"
 #include <windows.h>
+#include <fstream>
 
-std::string getConfigPath() {
-    return getAppDataDir() + "\\config.ini";
+static std::string getConfigPath() {
+    char path[MAX_PATH];
+    SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, path);
+    return std::string(path) + "\\monitor_config.ini";
 }
 
 bool loadConfig(Config& cfg) {
-    std::string path = getConfigPath();
+    std::ifstream f(getConfigPath());
+    if (!f.is_open()) return false;
 
-    if (GetFileAttributesA(path.c_str()) == INVALID_FILE_ATTRIBUTES)
-        return false;
-
-    char buffer[MAX_PATH];
-
-    GetPrivateProfileStringA("Paths", "BaseOrigem", "", buffer, MAX_PATH, path.c_str());
-    cfg.baseOrigem = buffer;
-
-    GetPrivateProfileStringA("Paths", "Destino", "", buffer, MAX_PATH, path.c_str());
-    cfg.destino = buffer;
-
-    cfg.intervaloMs = GetPrivateProfileIntA("Settings", "IntervaloMs", 15000, path.c_str());
-
-    return !cfg.baseOrigem.empty() && !cfg.destino.empty();
+    std::getline(f, cfg.origemBase);
+    std::getline(f, cfg.destino);
+    return true;
 }
 
-void createConfigWizard(Config& cfg) {
-    cfg.baseOrigem = selectFolderDialog("Selecione a pasta BASE da origem");
-    cfg.destino    = selectFolderDialog("Selecione a pasta DESTINO");
-    cfg.intervaloMs = 15000;
-
-    std::string path = getConfigPath();
-
-    WritePrivateProfileStringA("Paths", "BaseOrigem", cfg.baseOrigem.c_str(), path.c_str());
-    WritePrivateProfileStringA("Paths", "Destino", cfg.destino.c_str(), path.c_str());
-    WritePrivateProfileStringA("Settings", "IntervaloMs", "15000", path.c_str());
+void saveConfig(const Config& cfg) {
+    std::ofstream f(getConfigPath(), std::ios::trunc);
+    f << cfg.origemBase << "\n";
+    f << cfg.destino << "\n";
 }
