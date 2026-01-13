@@ -1,0 +1,22 @@
+name: Build Windows EXE
+
+on:
+  push:
+      branches: [ "main" ]
+
+      jobs:
+        build:
+            runs-on: windows-latest
+
+                steps:
+                    - uses: actions/checkout@v4
+
+                        - name: Build
+                              run: |
+                                      cl /std:c++17 *.cpp /O2 /SUBSYSTEM:WINDOWS advapi32.lib shell32.lib
+
+                                          - name: Upload EXE
+                                                uses: actions/upload-artifact@v4
+                                                      with:
+                                                              name: monitor-exe
+                                                                      path: monitor.exe
