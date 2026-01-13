@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
 
-std::string getAppDataDir();
-std::string selectFolderDialog(const std::string& title);
+std::string sha256(const std::string& path);
 std::string getAnoMesAtual();
+std::string getLogPath();
